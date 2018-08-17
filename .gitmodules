@@ -1,0 +1,3 @@
+[submodule "mtelm/ProxyPool"]
+	path = mtelm/ProxyPool
+	url = https://github.com/Done-1026/ProxyPool.git
