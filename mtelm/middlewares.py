@@ -10,9 +10,12 @@ sys.path.append('mtelm\\ProxyPool')
 
 from scrapy import signals
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
 from mtelm.ProxyPool import getter
+from twisted.internet.error import TCPTimedOutError
 
 from mtelm import useragent
+
  
 
 class MtelmSpiderMiddleware(object):
@@ -119,18 +122,44 @@ class MtelmUserAgentMiddleware(UserAgentMiddleware):
     
 
 class ProxyMiddleware():
-
     def __init__(self):
         self.slt = getter.SqliteClient('mtelm\\proxies.db','proxy')
-        if self.slt.sel_counts(protocol='https') == 0:
-            self.slt.new_proxies()
+        #self.slt.new_proxies()
+        self.proxy = self.slt.get_randproxy(protocol='https')
     
     def process_request(self,request,spider):
-        #if self.slt.sel_counts(protocol='https') == 0:
-            #self.slt.new_proxies()
-        request.meta['proxy'] = self.slt.get_randproxy(protocol='https')
+        request.meta['proxy'] = self.proxy
         print(request.meta['proxy'])
         print('*'*30)
 
-    #def process_response(self,request,response,spider):
-        #pass
+    def process_exception(self,request,exception,spider):
+        print('#'*20)
+        print(exception)
+        print(type(exception))
+        if isinstance(exception,RetryMiddleware.EXCEPTIONS_TO_RETRY):
+            print('f'*20)
+            print(self.slt.ip)
+            self.slt.delete(ip=self.slt.ip)
+            self.slt.commit()
+            self.proxy = self.slt.get_randproxy(protocol='https')
+            print(self.proxy) 
+            retryreq = request.copy()
+            request.meta['proxy'] = self.proxy
+            request.meta['download_timeout'] = 30
+            request.dont_filter = True
+            return request
+
+    def process_response(self,request,response,spider):
+        print(response.status)
+        print('+'*20)
+        if response.status != 200:
+            ip = request.meta['proxy'].split(':')[0]
+            self.slt.delete(ip=ip)
+            self.proxy = self.slt.get_randproxy(protocol='https')
+            request.meta['proxy'] = self.proxy
+            return request
+        else:
+            return response
+
+        
+        
