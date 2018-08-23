@@ -10,57 +10,60 @@ import scrapy
 
 from mtelm.items import FoodItem
 
+
 class ElemeRest(scrapy.Spider):
     name = 'eleme_rest'
 
     start_urls = [r'https://h5.ele.me/restapi/shopping/v3/restaurants']
     headers = {
         'referer': 'https://h5.ele.me/msite/food/',
-        #'x-shard': 'loc=114.273655,30.59086'
-            }    
+        # 'x-shard': 'loc=114.273655,30.59086'
+            }
     params = {
-        'latitude':'30.59086',
-        'longitude':'114.273655',
-        'keyword':'',
-        'offset':'0',
-        'limit':'8',
-        'extras[]':['activities','tags'],
-        #'extras[]':'tags',
-        'terminal':'h5',
-        'rank_id':'',
-        'order_by':'6',
-        #'cost_from':'',
-        #'cost_to':'',
-        'restaurant_category_ids[]':['-100'],
-        'rank_id':''
+        'latitude': '30.59086',
+        'longitude': '114.273655',
+        'keyword': '',
+        'offset': '0',
+        'limit': '8',
+        'extras[]': ['activities', 'tags'],
+        # 'extras[]': 'tags',
+        'terminal': 'h5',
+        'rank_id': '',
+        'order_by': '6',
+        # 'cost_from': '',
+        # 'cost_to': '',
+        'restaurant_category_ids[]': ['-100'],
+        'rank_id': ''
         }
     resp = True
-    
+
     def start_requests(self):
         return self.make_requests_from_url(self.start_urls[0])
 
-    def make_requests_from_url(self,url):
-        for offset in range(0,8,8):
+    def make_requests_from_url(self, url):
+        for offset in range(0, 8, 8):
             self.params['offset'] = str(offset)
             if self.resp:
                 yield scrapy.FormRequest(
-                    url,formdata=self.params,method='GET',headers=self.headers,callback=self.parse)
+                    url, formdata=self.params, method='GET',
+                    headers=self.headers, callback=self.parse)
             else:
                 break
 
-    def parse(self,response):
-        #print(response.text)
-        cont = json.loads(response.text) 
+    def parse(self, response):
+        # print(response.text)
+        cont = json.loads(response.text)
         self.params['rank_id'] = cont['meta']['rank_id']
         url = r'https://h5.ele.me/restapi/batch/v2?trace=shop_detail_h5'
         params = {
-            'timeout':15000,
-            'requests':{'menu':
-                       {
-                           'method':'GET',
-                           'url':'/shopping/v2/menu?restaurant_id=161122822&terminal=h5'
+            'timeout': 15000,
+            'requests': {'menu':
+                         {
+                           'method': 'GET',
+                           'url': '/shopping/v2/menu?restaurant_id=161122822\
+                           &terminal=h5'
                            }
-                       }
+                         }
             }
         headers = self.headers.copy()
         headers['Content-Type'] = 'application/json'
@@ -77,13 +80,15 @@ class ElemeRest(scrapy.Spider):
                 print(info['name'])
                 print(info['id'])
                 p = re.compile(r'(?<=id=)\w+')
-                params['requests']['menu']['url'] = p.sub(str(info['id']),params['requests']['menu']['url'])
+                params['requests']['menu']['url'] = p.sub(
+                    str(info['id']), params['requests']['menu']['url'])
                 print(params)
                 yield scrapy.Request(
-                    url,method='POST',body=json.dumps(params),headers=headers,callback=self.parse1)
+                    url, method='POST', body=json.dumps(params),
+                    headers=headers, callback=self.parse1)
 
-    def parse1(self,response):
-        #print(type(json.loads((json.loads(response.text)['menu']['body']))))
+    def parse1(self, response):
+        # print(type(json.loads((json.loads(response.text)['menu']['body']))))
         menu = json.loads((json.loads(response.text)['menu']['body']))
         item = FoodItem()
         for i in menu:
@@ -92,15 +97,7 @@ class ElemeRest(scrapy.Spider):
                 item['rating'] = j['rating']
                 item['month_sales'] = j['month_sales']
                 item['price'] = j['specfoods'][0]['price']
-                #del(j['specfoods'])
-                #item['name'] = j['specfoods']
+                # del(j['specfoods'])
+                # item['name'] = j['specfoods']
                 yield item
-        #menu = json.loads(response.text)['menu']['body'][0]
-        
-                
-                
-            
-            
-        
-        
-    
+        # menu = json.loads(response.text)['menu']['body'][0]

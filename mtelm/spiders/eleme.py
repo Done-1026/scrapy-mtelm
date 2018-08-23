@@ -5,7 +5,7 @@
 import scrapy
 
 from scrapy.spiders import CrawlSpider
-from mtelm.items import MtelmCatItem,MtelmSortItem,MtelmFbItem
+from mtelm.items import MtelmCatItem, MtelmSortItem, MtelmFbItem
 
 
 class ElemeCategorySpider(CrawlSpider):
@@ -13,27 +13,31 @@ class ElemeCategorySpider(CrawlSpider):
     name = 'eleme_cat'
 
     custom_settings = {
-        'ITEM_PIPELINES':{
-        'mtelm.pipelines.MtelmPipeline': 300    
+        'ITEM_PIPELINES': {
+            'mtelm.pipelines.MtelmPipeline': 300
             }
         }
-    start_urls=['https://h5.ele.me/restapi/shopping/v2/restaurant/category',
-                'https://h5.ele.me/restapi/shopping/v1/restaurants/outside_filter/attributes',
-                'https://h5.ele.me/restapi/shopping/v1/restaurants/filter-bar/attributes',
+    start_urls = [
+        'https://h5.ele.me/restapi/shopping/v2/restaurant/category',
+        'https://h5.ele.me/restapi/shopping/v1/restaurants/\
+        outside_filter/attributes',
+        'https://h5.ele.me/restapi/shopping/v1/restaurants/\
+        filter-bar/attributes',
                 ]
     headers = {
-        'referer': 'https://h5.ele.me/msite/food/'       
+        'referer': 'https://h5.ele.me/msite/food/'
         }
-    params = {'latitude':'30.59086','longitude':'114.273655'}
-    def start_requests(self):
-        return self.make_requests_from_url(self.start_urls)   
+    params = {'latitude': '30.59086', 'longitude': '114.273655'}
 
-    def make_requests_from_url(self,urls):
+    def start_requests(self):
+        return self.make_requests_from_url(self.start_urls)
+
+    def make_requests_from_url(self, urls):
         for url in urls:
             yield scrapy.http.FormRequest(
-                url,method='get',headers=self.headers,formdata=self.params)
+                url, method='get', headers=self.headers, formdata=self.params)
 
-    def parse(self,response):
+    def parse(self, response):
         if 'category' in response.request.url:
             items = MtelmCatItem()
             items['category'] = response.text
@@ -44,4 +48,3 @@ class ElemeCategorySpider(CrawlSpider):
             items = MtelmFbItem()
             items['bar'] = response.text
         yield items
-        
