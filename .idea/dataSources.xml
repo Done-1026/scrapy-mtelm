@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="proxies" uuid="7550f650-fa21-47fd-8b87-6a3be3983c8c">
+    <data-source source="LOCAL" name="proxies.db" uuid="27f6520b-fd6f-4bb3-b366-d932994ff5f8">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/mtelm/proxies.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/proxies.db</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

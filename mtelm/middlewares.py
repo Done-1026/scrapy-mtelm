@@ -6,13 +6,11 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 import random
 import sys
-sys.path.append('mtelm\\ProxyPool')
 
 from scrapy import signals
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
-from mtelm.ProxyPool import getter, dbapi
-from twisted.internet.error import TCPTimedOutError
+from ProxyPool import getter, dbapi
 
 from mtelm import useragent
 
@@ -123,10 +121,10 @@ class MtelmUserAgentMiddleware(UserAgentMiddleware):
 
 class ProxyMiddleware():
     def __init__(self):
-        self.db = dbapi.SqliteDb('mtelm\\proxies.db')
-        self.tbproxy = getter.SqliteClient(self.db,'proxy')
-        self.useful = getter.SqliteClient(self.db,'useful_proxy')
-        #self.tbproxy.new_proxies()
+        self.db = dbapi.SqliteDb('proxies.db')
+        self.tbproxy = getter.SqliteClient(self.db, 'proxy')
+        self.useful = getter.SqliteClient(self.db, 'useful_proxy')
+        self.tbproxy.new_proxies()
         self.proxy = self.tbproxy.get_randproxy(protocol='https')
     
     def process_request(self,request,spider):
@@ -144,8 +142,7 @@ class ProxyMiddleware():
             self.tbproxy.delete(ip=self.tbproxy.ip)
             self.tbproxy.db.commit()
             self.proxy = self.tbproxy.get_randproxy(protocol='https')
-            print(self.proxy) 
-            retryreq = request.copy()
+            print(self.proxy)
             request.meta['proxy'] = self.proxy
             request.meta['download_timeout'] = 30
             request.dont_filter = True
